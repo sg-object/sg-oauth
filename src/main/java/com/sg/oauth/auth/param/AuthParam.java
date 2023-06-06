@@ -1,5 +1,6 @@
 package com.sg.oauth.auth.param;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -7,11 +8,14 @@ import lombok.Setter;
 @Setter
 public class AuthParam {
 
-  private ResponseType responseType;
+	private ResponseType responseType;
 
-  private String clientId;
+	@NotBlank
+	private String clientId;
 
-  private String state;
+	@NotBlank
+	private String state;
 
-  private String redirectUri;
+	@NotBlank
+	private String redirectUri;
 }
