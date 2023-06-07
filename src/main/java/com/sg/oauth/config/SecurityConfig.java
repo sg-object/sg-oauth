@@ -13,41 +13,43 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sg.oauth.web.filter.SkipPathRequestMatcher;
 import com.sg.oauth.web.filter.TokenAuthenticationFilter;
-import com.sg.oauth.web.handler.ForbiddenFailureHandler;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Configuration
 public class SecurityConfig {
 
-	@Bean
-	SecurityFilterChain filterChain(final HttpSecurity http, final AuthenticationManager manager) throws Exception {
-		http.csrf(AbstractHttpConfigurer::disable).authorizeHttpRequests(req -> req.anyRequest().authenticated());
-		http.addFilterBefore(tokenAuthenticationFilter(manager), UsernamePasswordAuthenticationFilter.class);
-		return http.build();
-	}
+  @Bean
+  SecurityFilterChain filterChain(final HttpSecurity http, final AuthenticationManager manager,
+      final ObjectMapper objectMapper) throws Exception {
+    http.csrf(AbstractHttpConfigurer::disable)
+        .authorizeHttpRequests(req -> req.anyRequest().authenticated());
+    http.addFilterBefore(tokenAuthenticationFilter(manager, objectMapper),
+        UsernamePasswordAuthenticationFilter.class);
+    return http.build();
+  }
 
-	@Bean
-	WebSecurityCustomizer webSecurityCustomizer() {
-		return (web) -> web.ignoring().requestMatchers("/oauth/**");
-	}
+  @Bean
+  WebSecurityCustomizer webSecurityCustomizer() {
+    return (web) -> web.ignoring().requestMatchers("/oauth/**", "/error");
+  }
 
-	@Bean
-	AuthenticationManager authenticationManager(final HttpSecurity http) throws Exception {
-		final var builder = http.getSharedObject(AuthenticationManagerBuilder.class);
-		return builder.build();
-	}
+  @Bean
+  AuthenticationManager authenticationManager(final HttpSecurity http) throws Exception {
+    final var builder = http.getSharedObject(AuthenticationManagerBuilder.class);
+    return builder.build();
+  }
 
-	@Bean
-	ObjectMapper objectMapper() {
-		return new ObjectMapper();
-	}
+  @Bean
+  ObjectMapper objectMapper() {
+    return new ObjectMapper();
+  }
 
-	private TokenAuthenticationFilter tokenAuthenticationFilter(final AuthenticationManager manager) {
-		final var filter = new TokenAuthenticationFilter(new SkipPathRequestMatcher(Arrays.asList("/oauth/**")),
-				objectMapper());
-		filter.setAuthenticationFailureHandler(new ForbiddenFailureHandler());
-		filter.setAuthenticationManager(manager);
-		return filter;
-	}
+  private TokenAuthenticationFilter tokenAuthenticationFilter(final AuthenticationManager manager,
+      final ObjectMapper objectMapper) {
+    final var filter = new TokenAuthenticationFilter(
+        new SkipPathRequestMatcher(Arrays.asList("/oauth/**")), objectMapper);
+    filter.setAuthenticationManager(manager);
+    return filter;
+  }
 }
